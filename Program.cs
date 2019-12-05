@@ -1,4 +1,9 @@
 ﻿using System;
+using System.IO;
+using System.Linq;
+using System.Collections;
+using System.Collections.Generic;
+using CommandLine;
 
 namespace Hamming
 {
@@ -30,7 +35,7 @@ namespace Hamming
 
         private static void RunOptionsAndReturnExitCode(Options opts)
         {
-           
+
         }
     }
 }
