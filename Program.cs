@@ -19,13 +19,14 @@ namespace Hamming
         public string OutputFile { get; set; }
 
     }
+
     class Program
     {
         static void Main(string[] args)
         {
             Parser.Default.ParseArguments<Options>(args)
                 .WithParsed(opts => RunOptionsAndReturnExitCode(opts))
-                .WithNotParsed((errs) => HandleParseError(errs));
+                .WithNotParsed(errs => HandleParseError(errs));
         }
 
         private static void HandleParseError(IEnumerable<Error> errs)
@@ -35,7 +36,23 @@ namespace Hamming
 
         private static void RunOptionsAndReturnExitCode(Options opts)
         {
+            FileStream output = null;
+            if (opts.OutputFile != null)
+            {
+                output = new FileStream(opts.OutputFile, FileMode.Create, FileAccess.ReadWrite);
+            }
 
+            var hh = new HammingHandler(new FileStream(opts.InputFile, FileMode.Open, FileAccess.Read), output);
+
+            if (opts.Mode == 'k')
+            {
+                hh.Encode();
+            }
+
+            if (opts.Mode == 'd')
+            {
+                hh.Decode();
+            }
         }
     }
 }
