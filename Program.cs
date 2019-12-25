@@ -1,18 +1,17 @@
 ﻿using System;
-using System.IO;
-using System.Linq;
+using CommandLine;
 using System.Collections;
 using System.Collections.Generic;
-using CommandLine;
+using System.IO;
 
 namespace Hamming
 {
     class Options
     {
-        [Option('m', "mode", Required = true, HelpText = "k - encode | d - decode")]
+        [Option('m', "mode", Required = false, HelpText = "k - encode | d - decode")] // TODO: set required to true
         public char Mode { get; set; }
 
-        [Option('i', "input", Required = true, HelpText = "Input file to be processed.")]
+        [Option('i', "input", Required = false, HelpText = "Input file to be processed.")] // TODO: set required to true
         public string InputFile { get; set; }
 
         [Option('o', "output", Required = false, HelpText = "If specified, output is saved to a file.")]
@@ -42,17 +41,29 @@ namespace Hamming
                 output = new FileStream(opts.OutputFile, FileMode.Create, FileAccess.ReadWrite);
             }
 
-            var hh = new HammingHandler(new FileStream(opts.InputFile, FileMode.Open, FileAccess.Read), output);
+            var ba = Hamming.AddParityBits(new BitArray(new bool[] { true, false, true, false, true, false, true, false, false, false, true }));
 
-            if (opts.Mode == 'k')
+            Console.WriteLine();
+
+            foreach (bool bit in ba)
             {
-                hh.Encode();
+                Console.Write(bit ? "1 " : "0 ");
             }
 
-            if (opts.Mode == 'd')
-            {
-                hh.Decode();
-            }
+            Console.WriteLine();
+
+            // TODO: uncomment
+            // var hh = new HammingHandler(new FileStream(opts.InputFile, FileMode.Open, FileAccess.Read), output);
+
+            // if (opts.Mode == 'k')
+            // {
+            //    hh.Encode();
+            // }
+
+            // if (opts.Mode == 'd')
+            // {
+            //    hh.Decode();
+            // }
         }
     }
 }
