@@ -3,15 +3,16 @@ using CommandLine;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 namespace Hamming
 {
     class Options
     {
-        [Option('m', "mode", Required = false, HelpText = "k - encode | d - decode")] // TODO: set required to true
+        [Option('m', "mode", Required = true, HelpText = "k - encode | d - decode")]
         public char Mode { get; set; }
 
-        [Option('i', "input", Required = false, HelpText = "Input file to be processed.")] // TODO: set required to true
+        [Option('i', "input", Required = true, HelpText = "Input file to be processed.")]
         public string InputFile { get; set; }
 
         [Option('o', "output", Required = false, HelpText = "If specified, output is saved to a file.")]
@@ -52,13 +53,15 @@ namespace Hamming
 
             Console.WriteLine();
 
-            // TODO: uncomment
-            // var hh = new HammingHandler(new FileStream(opts.InputFile, FileMode.Open, FileAccess.Read), output);
+            Console.WriteLine(BitConverter.ToString((new Crc32()).GetHash(Encoding.ASCII.GetBytes("abc"))));
 
-            // if (opts.Mode == 'k')
-            // {
-            //    hh.Encode();
-            // }
+            // TODO: uncomment
+            var hh = new Crc32HammingHandler(new FileStream(opts.InputFile, FileMode.Open, FileAccess.Read), output);
+
+            if (opts.Mode == 'k')
+            {
+                hh.Encode();
+            }
 
             // if (opts.Mode == 'd')
             // {

@@ -7,11 +7,10 @@ namespace Hamming
 {
     public static class Hamming
     {
-        private static int InputLength = 11;
-        private static int OutputLength = 16;
+        public static int INPUT_LENGTH = 11;
+        public static int OUTPUT_LENGTH = 16;
 
-        private static int WordParityPosition = 15;
-        private static Dictionary<int, int> ParityPositions = new Dictionary<int, int>(
+        private static Dictionary<int, int> PARITY_POSITIONS = new Dictionary<int, int>(
             // note: pozice jsou mocniny 2 ponizeny o 1, protoze pole indexuje od 0
             new KeyValuePair<int, int>[] {
                 new KeyValuePair<int, int>(0, 0),
@@ -21,7 +20,7 @@ namespace Hamming
             }
         );
 
-        private static int[][] ParityBitsPositions = new int[][]
+        private static int[][] PARITY_BITS_POSITIONS = new int[][]
         {
             new int[] { 0, 1, 3, 4, 6, 8, 10 },
             new int[] { 0, 2, 3, 5, 6, 9, 10 },
@@ -31,17 +30,17 @@ namespace Hamming
 
         public static BitArray AddParityBits(BitArray input)
         {
-            if (input.Length != InputLength)
+            if (input.Length != INPUT_LENGTH)
             {
-                throw new ArgumentException(string.Format("Invalid input length. Must match the length of {0}.", InputLength.ToString()));
+                throw new ArgumentException(string.Format("Invalid input length. Must match the length of {0}.", INPUT_LENGTH.ToString()));
             }
 
-            BitArray parity = new BitArray(ParityPositions.Count);
+            BitArray parity = new BitArray(PARITY_POSITIONS.Count);
 
-            for (int i = 0; i < ParityPositions.Count; i++)
+            for (int i = 0; i < PARITY_POSITIONS.Count; i++)
             {
                 int cnt = 0;
-                foreach (int bitPosition in ParityBitsPositions[i])
+                foreach (int bitPosition in PARITY_BITS_POSITIONS[i])
                 {
                     cnt += input[bitPosition] ? 1 : 0;
                 }
@@ -59,14 +58,19 @@ namespace Hamming
             int j = 0;
             for (int i = 0; i < input.Length + parity.Length; i++)
             {
-                bool bit = ParityPositions.ContainsKey(i)
-                    ? parity[ParityPositions[i]]
+                bool bit = PARITY_POSITIONS.ContainsKey(i)
+                    ? parity[PARITY_POSITIONS[i]]
                     : input[j++];
 
                 inputList.Add(bit);
             }
 
             inputList.Add(!ParityHelper.EvenParity(new BitArray(inputList.ToArray())));
+
+            if (inputList.Count != OUTPUT_LENGTH)
+            {
+                throw new Exception("Error encounter during calculation of parity bits. Output length does not match.");
+            }
 
             return new BitArray(inputList.ToArray());
         }
