@@ -42,20 +42,6 @@ namespace Hamming
                 output = new FileStream(opts.OutputFile, FileMode.Create, FileAccess.ReadWrite);
             }
 
-            var ba = Hamming.AddParityBits(new BitArray(new bool[] { true, false, true, false, true, false, true, false, false, false, true }));
-
-            Console.WriteLine();
-
-            foreach (bool bit in ba)
-            {
-                Console.Write(bit ? "1 " : "0 ");
-            }
-
-            Console.WriteLine();
-
-            Console.WriteLine(BitConverter.ToString((new Crc32()).GetHash(Encoding.ASCII.GetBytes("abc"))));
-
-            // TODO: uncomment
             var hh = new Crc32HammingHandler(new FileStream(opts.InputFile, FileMode.Open, FileAccess.Read), output);
 
             if (opts.Mode == 'k')
