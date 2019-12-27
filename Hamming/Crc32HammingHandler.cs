@@ -43,95 +43,36 @@ namespace Hamming
                     }
                 }
 
-                // apply hamming to every 11 input bits
-
                 byte[] bufferBytes = Encoding.ASCII.GetBytes(buffer);
-                BitArray bufferBits = new BitArray(bufferBytes);
-
                 List<bool> result = new List<bool>();
-                List<bool> currentChunk = new List<bool>(); // note: current 11 bits
 
-                foreach (bool bit in bufferBits)
+                List<BitArray> inputChunks = SplitTo11BitChunks(bufferBytes);
+                foreach (BitArray chunk in inputChunks)
                 {
-                    currentChunk.Add(bit);
-                    if (currentChunk.Count == Hamming.INPUT_LENGTH)
+                    BitArray hamming = Hamming.AddParityBits(chunk);
+                    foreach (bool bit in hamming)
                     {
-                        BitArray hamResult = Hamming.AddParityBits(new BitArray(currentChunk.ToArray()));
-                        foreach (bool b in hamResult)
-                        {
-                            result.Add(b);
-                        }
-
-                        currentChunk.Clear();
+                        result.Add(bit);
                     }
                 }
 
-                if (currentChunk.Count > 0)
+                byte[] hammingedInputBytes = IOHelper.BitsToBytes(new BitArray(result.ToArray()));
+                byte[] crc32Bytes = (new Crc32()).GetHash(hammingedInputBytes);
+
+                List<BitArray> crc32Chunks = SplitTo11BitChunks(crc32Bytes);
+                foreach (BitArray chunk in crc32Chunks)
                 {
-                    // append bits to match 11 length
-                    while (currentChunk.Count < Hamming.INPUT_LENGTH)
+                    BitArray hamming = Hamming.AddParityBits(chunk);
+                    foreach (bool bit in hamming)
                     {
-                        currentChunk.Add(false);
-                    }
-
-                    BitArray hamResult = Hamming.AddParityBits(new BitArray(currentChunk.ToArray()));
-                    foreach (bool b in hamResult)
-                    {
-                        result.Add(b);
-                    }
-
-                    currentChunk.Clear();
-                }
-
-                // apply crc to hamminged input
-
-                foreach (byte hammingByte in IOHelper.BitsToBytes(new BitArray(result.ToArray())))
-                {
-                    //writer.Write(hammingByte);
-                }
-
-                byte[] crc = (new Crc32()).GetHash(IOHelper.BitsToBytes(new BitArray(result.ToArray())));
-                BitArray crcBits = new BitArray(crc);
-
-                foreach (bool bit in crcBits)
-                {
-                    currentChunk.Add(bit);
-                    if (currentChunk.Count == Hamming.INPUT_LENGTH)
-                    {
-                        BitArray hamResult = Hamming.AddParityBits(new BitArray(currentChunk.ToArray()));
-                        foreach (bool b in hamResult)
-                        {
-                            result.Add(b);
-                        }
-
-                        currentChunk.Clear();
+                        result.Add(bit);
                     }
                 }
 
-                if (currentChunk.Count > 0)
-                {
-                    // append bits to match 11 length
-                    while (currentChunk.Count < Hamming.INPUT_LENGTH)
-                    {
-                        currentChunk.Add(false);
-                    }
-
-                    BitArray hamResult = Hamming.AddParityBits(new BitArray(currentChunk.ToArray()));
-                    foreach (bool b in hamResult)
-                    {
-                        result.Add(b);
-                    }
-
-                    currentChunk.Clear();
-                }
-
-                foreach (byte crcHammingByte in IOHelper.BitsToBytes(new BitArray(result.ToArray())))
-                {
-                    writer.Write(crcHammingByte);
-                }
-
+                byte[] byteResult = IOHelper.BitsToBytes(new BitArray(result.ToArray()));
                 result.Clear();
-                currentChunk.Clear();
+
+                writer.Write(byteResult);
 
                 writer.Flush();
             }
