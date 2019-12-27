@@ -14,8 +14,6 @@ namespace Hamming
 
     public class Crc32
     {
-        public const int BLOCK_LENGTH = 8192;
-
         private const uint POLYNOMIAL = 0xEDB88320; // note: g(x) generator polynomial set by IEEE 802.3
         private const uint SEED = 0xFFFFFFFF; // note: default initialize value
 

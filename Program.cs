@@ -49,10 +49,10 @@ namespace Hamming
                 hh.Encode();
             }
 
-            // if (opts.Mode == 'd')
-            // {
-            //    hh.Decode();
-            // }
+            if (opts.Mode == 'd')
+            {
+                hh.Decode();
+            }
         }
     }
 }
