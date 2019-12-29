@@ -9,13 +9,13 @@ namespace Hamming
         - http://sanity-free.org/12/crc32_implementation_in_csharp.html
         - https://stackoverflow.com/questions/2587766/how-is-a-crc32-checksum-calculated
         - https://rosettacode.org/wiki/CRC-32#C.23
+        - https://en.wikipedia.org/wiki/Cyclic_redundancy_check
 
     */
 
     public class Crc32
     {
         private const uint POLYNOMIAL = 0xEDB88320; // note: g(x) generator polynomial set by IEEE 802.3
-        private const uint SEED = 0xFFFFFFFF; // note: default initialize value
 
         private uint[] table;
 
@@ -31,7 +31,7 @@ namespace Hamming
                 {
                     if ((entry & 1) == 1)
                     {
-                        entry = (uint)((entry >> 1) ^ POLYNOMIAL);
+                        entry = (uint)((entry >> 1) ^ POLYNOMIAL); // note: ^ xor
                     }
                     else
                     {
@@ -45,10 +45,10 @@ namespace Hamming
 
         public byte[] GetHash(byte[] bytes)
         {
-            uint crc = SEED;
+            uint crc = 0xFFFFFFFF;
             for (int i = 0; i < bytes.Length; i++)
             {
-                byte index = (byte)(((crc) & 0xff) ^ bytes[i]);
+                byte index = (byte)(((crc) ^ bytes[i]) & 0xff);
                 crc = (uint)((crc >> 8) ^ this.table[index]);
             }
 
