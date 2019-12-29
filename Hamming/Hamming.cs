@@ -70,7 +70,7 @@ namespace Hamming
             int[] parities = new int[4];
             for (int i = 0; i < PARITY_POSITIONS.Count; i++)
             {
-                int cnt = 0; // counting bits on the given positions
+                int cnt = 0; // note: counting bits on the given positions
                 foreach (int bitPosition in DATA_BITS_POSITIONS_TO_CHECK_PARITY[i])
                 {
                     cnt += encodedData[bitPosition] ? 1 : 0;
@@ -90,11 +90,6 @@ namespace Hamming
 
             bool extraParity = bitCnt % 2 == 0 ? false : true;
             bool extraParityOK = extraParity == encodedData[encodedData.Count - 1];
-
-            // if (!syndromeOK && extraParityOK)
-            // {
-            //     // throw new Exception("Too many errors in encoded data.");
-            // }
 
             if (!syndromeOK && !extraParityOK)
             {

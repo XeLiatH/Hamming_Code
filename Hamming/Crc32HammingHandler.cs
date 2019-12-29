@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.IO;
 using System.Text;
 using System.Collections;
@@ -46,7 +47,6 @@ namespace Hamming
                 byte[] encodedDataBytes = IOHelper.BitsToBytes(encodedData);
 
                 byte[] crc32Bytes = (new Crc32()).GetHash(encodedDataBytes);
-
                 BitArray encodedCrc32 = DoHammingEncoding(crc32Bytes);
                 byte[] encodedCrc32Bytes = IOHelper.BitsToBytes(encodedCrc32);
 
@@ -77,57 +77,30 @@ namespace Hamming
                     }
                 }
 
-                byte[] crcBytes = new byte[6];
-                for (int i = 0; i < crcBytes.Length; i++)
+                byte[] originalEncodedCrc = new byte[6];
+                for (int i = 0; i < originalEncodedCrc.Length; i++)
                 {
-                    crcBytes[i] = buffer[i];
+                    originalEncodedCrc[i] = buffer[i];
                 }
 
-                List<byte[]> bytePairs = new List<byte[]>();
-                for (int i = 6; i < buffer.Length; i = i + 2)
+                byte[] encodedData = buffer.Skip(6).ToArray();
+
+                BitArray decodedData = DoHammingDecoding(encodedData);
+                byte[] decodedDataBytes = IOHelper.BitsToBytes(decodedData);
+
+                // TODO, note: odebirani posledniho byte 8193 -> 8192, na konci je divnoznak
+                Array.Resize(ref decodedDataBytes, decodedDataBytes.Length - 1);
+
+                byte[] crc32Bytes = (new Crc32()).GetHash(encodedData);
+                BitArray encodedCrc32 = DoHammingEncoding(crc32Bytes);
+                byte[] encodedCrc32Bytes = IOHelper.BitsToBytes(encodedCrc32);
+
+                if (!CrcMatches(originalEncodedCrc, encodedCrc32Bytes))
                 {
-                    bytePairs.Add(new byte[] { buffer[i], buffer[i + 1] });
+                    decodedDataBytes = new byte[decodedDataBytes.Length];
                 }
 
-                List<byte> dataToCalculateCrcFrom = new List<byte>();
-
-                List<bool> reconstructedDataBits = new List<bool>();
-                foreach (byte[] pair in bytePairs)
-                {
-                    BitArray decodedPair = Hamming.Decode(new BitArray(pair));
-                    foreach (bool bit in decodedPair)
-                    {
-                        reconstructedDataBits.Add(bit);
-                    }
-
-                    dataToCalculateCrcFrom.AddRange(pair);
-                }
-
-                byte[] reconstructedData = IOHelper.BitsToBytes(new BitArray(reconstructedDataBits.ToArray()));
-
-                Array.Resize(ref reconstructedData, reconstructedData.Length - 1);
-
-                byte[] reconstructedCrc32Bytes = (new Crc32()).GetHash(dataToCalculateCrcFrom.ToArray());
-
-                List<bool> crcResult = new List<bool>();
-                List<BitArray> crc32Chunks = SplitTo11BitChunks(reconstructedCrc32Bytes);
-                foreach (BitArray chunk in crc32Chunks)
-                {
-                    BitArray hamming = Hamming.Encode(chunk);
-                    foreach (bool bit in hamming)
-                    {
-                        crcResult.Add(bit);
-                    }
-                }
-
-                byte[] crcByteResult = IOHelper.BitsToBytes(new BitArray(crcResult.ToArray()));
-
-                if (!CrcMatches(crcBytes, crcByteResult))
-                {
-                    reconstructedData = new byte[reconstructedData.Length];
-                }
-
-                writer.Write(Encoding.UTF8.GetString(reconstructedData));
+                writer.Write(Encoding.UTF8.GetString(decodedDataBytes));
 
                 writer.Flush();
             }
@@ -193,6 +166,29 @@ namespace Hamming
             {
                 BitArray hamming = Hamming.Encode(chunk);
                 foreach (bool bit in hamming)
+                {
+                    result.Add(bit);
+                }
+            }
+
+            return new BitArray(result.ToArray());
+        }
+
+        private BitArray DoHammingDecoding(byte[] data)
+        {
+            List<BitArray> encodedDataChunks = new List<BitArray>();
+            for (int i = 0; i < data.Length; i = i + 2)
+            {
+                encodedDataChunks.Add(
+                    new BitArray(new byte[] { data[i], data[i + 1] })
+                );
+            }
+
+            List<bool> result = new List<bool>();
+            foreach (BitArray chunk in encodedDataChunks)
+            {
+                BitArray decodedPair = Hamming.Decode(chunk);
+                foreach (bool bit in decodedPair)
                 {
                     result.Add(bit);
                 }
