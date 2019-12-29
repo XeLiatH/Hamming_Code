@@ -91,10 +91,10 @@ namespace Hamming
             bool extraParity = bitCnt % 2 == 0 ? false : true;
             bool extraParityOK = extraParity == encodedData[encodedData.Count - 1];
 
-            if (!syndromeOK && extraParityOK)
-            {
-                // throw new Exception("Too many errors in encoded data.");
-            }
+            // if (!syndromeOK && extraParityOK)
+            // {
+            //     // throw new Exception("Too many errors in encoded data.");
+            // }
 
             if (!syndromeOK && !extraParityOK)
             {

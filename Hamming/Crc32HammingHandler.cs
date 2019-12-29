@@ -42,40 +42,16 @@ namespace Hamming
                     }
                 }
 
-                List<bool> result = new List<bool>();
+                BitArray encodedData = DoHammingEncoding(buffer);
+                byte[] encodedDataBytes = IOHelper.BitsToBytes(encodedData);
 
-                List<BitArray> inputChunks = SplitTo11BitChunks(buffer);
-                foreach (BitArray chunk in inputChunks)
-                {
-                    BitArray hamming = Hamming.Encode(chunk);
-                    foreach (bool bit in hamming)
-                    {
-                        result.Add(bit);
-                    }
-                }
+                byte[] crc32Bytes = (new Crc32()).GetHash(encodedDataBytes);
 
-                byte[] hammingedInputBytes = IOHelper.BitsToBytes(new BitArray(result.ToArray()));
-                byte[] crc32Bytes = (new Crc32()).GetHash(hammingedInputBytes);
+                BitArray encodedCrc32 = DoHammingEncoding(crc32Bytes);
+                byte[] encodedCrc32Bytes = IOHelper.BitsToBytes(encodedCrc32);
 
-                List<bool> crcResult = new List<bool>();
-
-                List<BitArray> crc32Chunks = SplitTo11BitChunks(crc32Bytes);
-                foreach (BitArray chunk in crc32Chunks)
-                {
-                    BitArray hamming = Hamming.Encode(chunk);
-                    foreach (bool bit in hamming)
-                    {
-                        crcResult.Add(bit);
-                    }
-                }
-
-                byte[] crcByteResult = IOHelper.BitsToBytes(new BitArray(crcResult.ToArray()));
-                crcResult.Clear();
-                byte[] byteResult = IOHelper.BitsToBytes(new BitArray(result.ToArray()));
-                result.Clear();
-
-                writer.Write(crcByteResult);
-                writer.Write(byteResult);
+                writer.Write(encodedCrc32Bytes);
+                writer.Write(encodedDataBytes);
 
                 writer.Flush();
             }
@@ -127,11 +103,9 @@ namespace Hamming
                     dataToCalculateCrcFrom.AddRange(pair);
                 }
 
-                // Console.WriteLine(dataToCalculateCrcFrom.Count);
-
                 byte[] reconstructedData = IOHelper.BitsToBytes(new BitArray(reconstructedDataBits.ToArray()));
 
-                // Array.Resize(ref reconstructedData, reconstructedData.Length - 1);
+                Array.Resize(ref reconstructedData, reconstructedData.Length - 1);
 
                 byte[] reconstructedCrc32Bytes = (new Crc32()).GetHash(dataToCalculateCrcFrom.ToArray());
 
@@ -208,6 +182,23 @@ namespace Hamming
             }
 
             return true;
+        }
+
+        private BitArray DoHammingEncoding(byte[] data)
+        {
+            List<bool> result = new List<bool>();
+
+            List<BitArray> inputChunks = SplitTo11BitChunks(data);
+            foreach (BitArray chunk in inputChunks)
+            {
+                BitArray hamming = Hamming.Encode(chunk);
+                foreach (bool bit in hamming)
+                {
+                    result.Add(bit);
+                }
+            }
+
+            return new BitArray(result.ToArray());
         }
     }
 }
