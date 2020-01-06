@@ -109,6 +109,46 @@ namespace Hamming
             writer.Close();
         }
 
+        private BitArray DoHammingEncoding(byte[] data)
+        {
+            List<bool> result = new List<bool>();
+
+            List<BitArray> inputChunks = SplitTo11BitChunks(data);
+            foreach (BitArray chunk in inputChunks)
+            {
+                BitArray hamming = Hamming.Encode(chunk);
+                foreach (bool bit in hamming)
+                {
+                    result.Add(bit);
+                }
+            }
+
+            return new BitArray(result.ToArray());
+        }
+
+        private BitArray DoHammingDecoding(byte[] data)
+        {
+            List<BitArray> encodedDataChunks = new List<BitArray>();
+            for (int i = 0; i < data.Length; i = i + 2)
+            {
+                encodedDataChunks.Add(
+                    new BitArray(new byte[] { data[i], data[i + 1] })
+                );
+            }
+
+            List<bool> result = new List<bool>();
+            foreach (BitArray chunk in encodedDataChunks)
+            {
+                BitArray decodedPair = Hamming.Decode(chunk);
+                foreach (bool bit in decodedPair)
+                {
+                    result.Add(bit);
+                }
+            }
+
+            return new BitArray(result.ToArray());
+        }
+
         private List<BitArray> SplitTo11BitChunks(byte[] bytes)
         {
             List<BitArray> result = new List<BitArray>();
@@ -155,46 +195,6 @@ namespace Hamming
             }
 
             return true;
-        }
-
-        private BitArray DoHammingEncoding(byte[] data)
-        {
-            List<bool> result = new List<bool>();
-
-            List<BitArray> inputChunks = SplitTo11BitChunks(data);
-            foreach (BitArray chunk in inputChunks)
-            {
-                BitArray hamming = Hamming.Encode(chunk);
-                foreach (bool bit in hamming)
-                {
-                    result.Add(bit);
-                }
-            }
-
-            return new BitArray(result.ToArray());
-        }
-
-        private BitArray DoHammingDecoding(byte[] data)
-        {
-            List<BitArray> encodedDataChunks = new List<BitArray>();
-            for (int i = 0; i < data.Length; i = i + 2)
-            {
-                encodedDataChunks.Add(
-                    new BitArray(new byte[] { data[i], data[i + 1] })
-                );
-            }
-
-            List<bool> result = new List<bool>();
-            foreach (BitArray chunk in encodedDataChunks)
-            {
-                BitArray decodedPair = Hamming.Decode(chunk);
-                foreach (bool bit in decodedPair)
-                {
-                    result.Add(bit);
-                }
-            }
-
-            return new BitArray(result.ToArray());
         }
     }
 }
